@@ -12,7 +12,6 @@ rsync -avz \
     --exclude='.git/' \
     --exclude='.github/' \
     --exclude='__pycache__/' \
-    --exclude='.workbuddy' \
     --exclude='venv' \
     /Users/ziwh666/GitHub/ai-dataplatform-ops \
     root@182.43.22.165:/data/github/
