@@ -1,0 +1,37 @@
+# go/configs/dev.yaml
+# 本地开发配置
+server:
+  host: "0.0.0.0"
+  port: 3000
+  mode: "http"
+
+mcp:
+  tool_timeout: "30s"
+  max_concurrent: 10
+
+middleware:
+  timeout:
+    default: "30s"
+    per_tool:
+      search_logs: "60s"
+      restart_service: "120s"
+  circuit_breaker:
+    max_requests: 5
+    interval: "60s"
+    timeout: "30s"
+    failure_ratio: 0.5
+  rate_limit:
+    global_rps: 100
+    per_user_rps: 10
+  cache:
+    enabled: true
+    default_ttl: "5m"
+    redis_url: "redis://localhost:6379/0"
+
+database:
+  postgres_url: "postgresql://aiops:aiops@localhost:5432/aiops"
+  redis_url: "redis://localhost:6379/0"
+
+tracing:
+  enabled: true
+  endpoint: "localhost:4317"

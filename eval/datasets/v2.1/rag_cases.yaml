@@ -1,0 +1,146 @@
+# RAG 检索评估数据集 v2.1
+# 评估 RAG 检索质量：召回率、精确度、相关文档覆盖
+
+- id: R001
+  input:
+    query: "HDFS NameNode 频繁 Full GC 的处理方法"
+  expected:
+    relevant_docs_contain:
+      - "NameNode"
+      - "GC"
+      - "heap"
+    top_k: 5
+    min_recall: 0.8
+  tags: ["hdfs", "gc", "rag"]
+
+- id: R002
+  input:
+    query: "Kafka ISR 不同步问题排查步骤"
+  expected:
+    relevant_docs_contain:
+      - "ISR"
+      - "replica"
+      - "broker"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["kafka", "isr", "rag"]
+
+- id: R003
+  input:
+    query: "YARN 队列资源不足导致作业 Pending 的解决方案"
+  expected:
+    relevant_docs_contain:
+      - "队列"
+      - "资源"
+      - "capacity"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["yarn", "scheduling", "rag"]
+
+- id: R004
+  input:
+    query: "ES 集群变黄的排查方法"
+  expected:
+    relevant_docs_contain:
+      - "yellow"
+      - "分片"
+      - "shard"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["es", "cluster_health", "rag"]
+
+- id: R005
+  input:
+    query: "DataNode 磁盘空间不足的处理流程"
+  expected:
+    relevant_docs_contain:
+      - "DataNode"
+      - "磁盘"
+      - "空间"
+    top_k: 5
+    min_recall: 0.8
+  tags: ["hdfs", "disk", "rag"]
+
+- id: R006
+  input:
+    query: "Kafka consumer group 消费延迟排查"
+  expected:
+    relevant_docs_contain:
+      - "consumer"
+      - "lag"
+      - "消费"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["kafka", "consumer_lag", "rag"]
+
+- id: R007
+  input:
+    query: "HDFS NameNode HA 切换故障恢复"
+  expected:
+    relevant_docs_contain:
+      - "NameNode"
+      - "HA"
+      - "切换"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["hdfs", "ha", "rag"]
+
+- id: R008
+  input:
+    query: "Kafka broker 磁盘使用率过高的处理"
+  expected:
+    relevant_docs_contain:
+      - "broker"
+      - "磁盘"
+      - "retention"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["kafka", "disk", "rag"]
+
+- id: R009
+  input:
+    query: "YARN NodeManager 频繁失联"
+  expected:
+    relevant_docs_contain:
+      - "NodeManager"
+      - "heartbeat"
+      - "网络"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["yarn", "nm", "rag"]
+
+- id: R010
+  input:
+    query: "ES GC 频繁导致查询超时"
+  expected:
+    relevant_docs_contain:
+      - "GC"
+      - "JVM"
+      - "查询"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["es", "gc", "rag"]
+
+- id: R011
+  input:
+    query: "Hive 数据倾斜优化方法"
+  expected:
+    relevant_docs_contain:
+      - "数据倾斜"
+      - "skew"
+      - "Map"
+    top_k: 5
+    min_recall: 0.6
+  tags: ["hive", "data_skew", "rag"]
+
+- id: R012
+  input:
+    query: "HDFS 小文件合并方案"
+  expected:
+    relevant_docs_contain:
+      - "小文件"
+      - "合并"
+      - "NameNode"
+    top_k: 5
+    min_recall: 0.7
+  tags: ["hdfs", "small_files", "rag"]

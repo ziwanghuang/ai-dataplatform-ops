@@ -1,0 +1,101 @@
+# Prometheus 告警规则 — AIOps Agent 专用
+groups:
+  # ── Agent 健康告警 ──
+  - name: agent_health
+    rules:
+      - alert: AgentHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{app="agent-service", status=~"5.."}[5m])) /
+          sum(rate(http_requests_total{app="agent-service"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Agent HTTP 5xx 错误率 > 5%"
+          description: "当前错误率: {{ $value | humanizePercentage }}"
+
+      - alert: AgentHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(aiops_agent_duration_seconds_bucket[5m])) by (le)) > 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent P95 延迟 > 15s"
+          description: "当前 P95: {{ $value | humanizeDuration }}"
+
+      - alert: AgentPodRestarting
+        expr: |
+          increase(kube_pod_container_status_restarts_total{
+            namespace="aiops-production", container="agent"
+          }[1h]) > 3
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Agent Pod 1 小时内重启 > 3 次"
+
+  # ── LLM 告警 ──
+  - name: llm_health
+    rules:
+      - alert: LLMHighFailureRate
+        expr: |
+          sum(rate(aiops_llm_request_total{status="error"}[10m])) /
+          sum(rate(aiops_llm_request_total[10m])) > 0.10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LLM 调用失败率 > 10%"
+
+      - alert: LLMBudgetExhausted
+        expr: aiops_llm_token_budget_remaining < 1000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM Token 预算即将耗尽"
+
+  # ── MCP 工具告警 ──
+  - name: mcp_health
+    rules:
+      - alert: MCPCircuitBreakerOpen
+        expr: aiops_mcp_circuit_breaker_state == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MCP 工具熔断器打开"
+          description: "工具 {{ $labels.tool_name }} 熔断"
+
+      - alert: MCPHighToolLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(aiops_mcp_tool_duration_seconds_bucket[5m])) by (le, tool_name)) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MCP 工具 {{ $labels.tool_name }} P95 延迟 > 10s"
+
+  # ── RAG 质量告警 ──
+  - name: rag_quality
+    rules:
+      - alert: RAGLowRecall
+        expr: aiops_rag_retrieval_recall < 0.5
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAG 召回率低于 0.5"
+
+  # ── 评估趋势告警 ──
+  - name: eval_quality
+    rules:
+      - alert: QualityDegradation
+        expr: aiops_eval_quality_trend_alert == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI 质量趋势退化告警"
+          description: "周环比退化超过 10%"

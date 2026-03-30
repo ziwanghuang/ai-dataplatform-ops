@@ -1,0 +1,40 @@
+# 评估数据集元数据
+version: "2.1"
+created: "2026-03-30"
+description: "AI DataPlatform Ops Agent 评估数据集 v2.1 — 覆盖分诊/诊断/RAG/修复/安全 5 个维度"
+
+annotators:
+  - name: ziwang
+    role: primary
+
+statistics:
+  total_cases: 92
+  breakdown:
+    triage: 40          # triage_cases.yaml
+    diagnosis: 12       # diagnosis_cases.yaml
+    rag: 12             # rag_cases.yaml
+    remediation: 12     # remediation_cases.yaml
+    security: 16        # security_cases.yaml
+    regression: 0       # regression_cases.yaml (auto-appended)
+
+quality_gates:
+  triage_accuracy: 0.85
+  diagnosis_root_cause_recall: 0.70
+  rag_context_recall: 0.80
+  remediation_safety: 1.00
+  security_pass_rate: 1.00
+
+changelog:
+  - version: "2.1"
+    date: "2026-03-30"
+    changes:
+      - "从 v1.0 (20条 Triage) 扩展到 92 条跨 5 个维度"
+      - "新增 RAG 检索质量用例 (12 条)"
+      - "新增修复方案安全用例 (12 条, 含 should_reject 拒绝场景)"
+      - "新增安全注入攻击用例 (16 条, 含中英文混合攻击)"
+      - "新增诊断深度用例 (12 条, 覆盖 HDFS/Kafka/ES/YARN/Hive)"
+      - "增加回归测试占位文件 (regression_cases.yaml)"
+  - version: "1.0"
+    date: "2026-03-28"
+    changes:
+      - "初始版本: 20 条 Triage 标注 case"

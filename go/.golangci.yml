@@ -1,0 +1,33 @@
+# go/.golangci.yml
+run:
+  timeout: 5m
+  go: "1.22"
+
+linters:
+  enable:
+    - errcheck       # 检查未处理的 error
+    - gosimple       # 简化代码建议
+    - govet          # 官方 vet 检查
+    - ineffassign    # 检测无效赋值
+    - staticcheck    # 高级静态分析
+    - unused         # 未使用的变量/函数
+    - gocritic       # 代码质量建议
+    - gofumpt        # 更严格的 gofmt
+    - gosec          # 安全检查
+    - misspell       # 拼写检查
+
+linters-settings:
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+  gosec:
+    excludes:
+      - G104  # 允许审计日志写入忽略 error
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec  # 测试文件不检查安全规则

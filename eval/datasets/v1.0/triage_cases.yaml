@@ -1,0 +1,176 @@
+# 分诊评估数据集 v1.0
+# 格式：每条 case 包含 query + 期望的 intent/complexity/route
+# 用于评估 Triage Agent 的分类准确率
+
+version: "1.0"
+description: "Triage 分诊评估数据集（20 条）"
+
+cases:
+  # ─── 简单查询（应走 direct_tool 快速路径）─────────
+  - id: "triage-001"
+    query: "HDFS 容量还剩多少？"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"
+      urgency: "low"
+      components: ["hdfs"]
+
+  - id: "triage-002"
+    query: "NameNode 堆内存使用率"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"
+      urgency: "low"
+      components: ["hdfs"]
+
+  - id: "triage-003"
+    query: "Kafka 消费延迟多少"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"
+      urgency: "low"
+      components: ["kafka"]
+
+  - id: "triage-004"
+    query: "ES 集群健康状态"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"
+      urgency: "low"
+      components: ["es"]
+
+  - id: "triage-005"
+    query: "当前有哪些活跃告警"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"
+      urgency: "low"
+
+  # ─── 故障诊断（应走完整诊断链路）─────────────────
+  - id: "triage-006"
+    query: "HDFS 写入为什么变慢了？"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "complex"
+      route: "diagnosis"
+      urgency: "high"
+      components: ["hdfs"]
+
+  - id: "triage-007"
+    query: "为什么 YARN 作业一直 Pending"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "complex"
+      route: "diagnosis"
+      urgency: "high"
+      components: ["yarn"]
+
+  - id: "triage-008"
+    query: "NameNode 频繁 Full GC，怎么回事"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "complex"
+      route: "diagnosis"
+      urgency: "critical"
+      components: ["hdfs"]
+
+  - id: "triage-009"
+    query: "Kafka 消息积压越来越多"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "moderate"
+      route: "diagnosis"
+      urgency: "high"
+      components: ["kafka"]
+
+  - id: "triage-010"
+    query: "集群跑批总是卡住"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "complex"
+      route: "diagnosis"
+      urgency: "high"
+      components: ["yarn"]
+
+  # ─── 健康检查 ─────────────────────────────────
+  - id: "triage-011"
+    query: "做一次全面巡检"
+    expected:
+      intent: "health_check"
+      complexity: "moderate"
+      route: "diagnosis"
+
+  - id: "triage-012"
+    query: "集群整体情况怎么样"
+    expected:
+      intent: "health_check"
+      complexity: "moderate"
+      route: "diagnosis"
+
+  # ─── 容量规划 ─────────────────────────────────
+  - id: "triage-013"
+    query: "HDFS 按当前增长趋势还能撑多久"
+    expected:
+      intent: "capacity_planning"
+      complexity: "complex"
+      route: "diagnosis"
+
+  - id: "triage-014"
+    query: "是不是需要扩容了"
+    expected:
+      intent: "capacity_planning"
+      complexity: "moderate"
+      route: "diagnosis"
+
+  # ─── 告警处理 ─────────────────────────────────
+  - id: "triage-015"
+    query: "收到 NameNode heap 超过 90% 的告警"
+    expected:
+      intent: "alert_handling"
+      complexity: "moderate"
+      route: "diagnosis"
+      urgency: "high"
+
+  # ─── 边界 case ────────────────────────────────
+  - id: "triage-016"
+    query: "帮我看看"
+    expected:
+      intent: "health_check"
+      complexity: "moderate"
+      route: "diagnosis"
+
+  - id: "triage-017"
+    query: "dfs.namenode.handler.count 这个参数怎么配"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"
+
+  - id: "triage-018"
+    query: "HDFS 和 YARN 都有问题，写入慢而且作业 Pending"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "complex"
+      route: "diagnosis"
+      urgency: "high"
+      components: ["hdfs", "yarn"]
+
+  - id: "triage-019"
+    query: "error: java.lang.OutOfMemoryError: Direct buffer memory"
+    expected:
+      intent: "fault_diagnosis"
+      complexity: "complex"
+      route: "diagnosis"
+      urgency: "critical"
+
+  - id: "triage-020"
+    query: "最近有什么变更？"
+    expected:
+      intent: "status_query"
+      complexity: "simple"
+      route: "direct_tool"

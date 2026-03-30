@@ -1,0 +1,212 @@
+# 诊断评估数据集 v2.1
+# 评估 Diagnostic Agent 的根因分析能力
+# 每条 case 包含输入查询、预期根因关键词、置信度要求、工具使用要求
+
+- id: D001
+  input:
+    query: "HDFS NameNode heap 使用率告警，当前 95%"
+    request_type: "alert"
+    context:
+      component: "hdfs"
+      metric: "nn_heap_used_percent"
+      value: 95
+  expected:
+    root_cause_contains: ["NameNode", "heap", "内存"]
+    confidence_min: 0.6
+    evidence_required: true
+    remediation_safe: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "NameNode JVM heap 内存不足，可能由大量小文件或元数据膨胀导致"
+    remediation: "增大 NameNode heap 配置 / 合并小文件 / 触发 Full GC"
+  tags: ["hdfs", "heap", "complex"]
+
+- id: D002
+  input:
+    query: "Kafka consumer group group-etl 消费延迟持续增大"
+    request_type: "alert"
+    context:
+      component: "kafka"
+      consumer_group: "group-etl"
+      max_lag: 5000000
+  expected:
+    root_cause_contains: ["消费", "lag", "consumer"]
+    confidence_min: 0.5
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "消费者处理能力不足 / 分区数不匹配 / GC 导致消费暂停"
+  tags: ["kafka", "consumer_lag", "complex"]
+
+- id: D003
+  input:
+    query: "HDFS DataNode 磁盘使用率超过 90%，多个节点告警"
+    request_type: "alert"
+    context:
+      component: "hdfs"
+      metric: "dn_disk_used_percent"
+      affected_nodes: 3
+  expected:
+    root_cause_contains: ["磁盘", "DataNode", "空间"]
+    confidence_min: 0.6
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "DataNode 磁盘容量不足，需扩容或清理过期数据"
+  tags: ["hdfs", "disk", "capacity"]
+
+- id: D004
+  input:
+    query: "YARN ResourceManager 切换，作业大面积失败"
+    request_type: "alert"
+    context:
+      component: "yarn"
+      event: "rm_failover"
+  expected:
+    root_cause_contains: ["ResourceManager", "切换", "RM"]
+    confidence_min: 0.5
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "RM 主备切换导致运行中作业中断，需检查 RM 健康状况"
+  tags: ["yarn", "failover", "complex"]
+
+- id: D005
+  input:
+    query: "Kafka broker-2 ISR 不同步，多个 partition 只有 1 个副本"
+    request_type: "alert"
+    context:
+      component: "kafka"
+      broker_id: 2
+      under_replicated_partitions: 45
+  expected:
+    root_cause_contains: ["ISR", "副本", "replica"]
+    confidence_min: 0.5
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "Broker-2 性能瓶颈或网络问题导致 follower 无法追上 leader"
+  tags: ["kafka", "isr", "replication"]
+
+- id: D006
+  input:
+    query: "ES 集群变黄，有 15 个未分配分片"
+    request_type: "alert"
+    context:
+      component: "es"
+      cluster_status: "yellow"
+      unassigned_shards: 15
+  expected:
+    root_cause_contains: ["分片", "未分配", "shard"]
+    confidence_min: 0.5
+    evidence_required: true
+  ground_truth:
+    root_cause: "磁盘空间不足 / 节点下线 / 分片分配规则冲突"
+  tags: ["es", "shard", "complex"]
+
+- id: D007
+  input:
+    query: "ES 查询延迟突然增大，P99 从 200ms 升到 5s"
+    request_type: "user_query"
+    context:
+      component: "es"
+      metric: "query_latency_p99"
+      current_value: 5000
+      baseline: 200
+  expected:
+    root_cause_contains: ["查询", "延迟", "慢"]
+    confidence_min: 0.5
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "可能原因：GC 频繁 / 磁盘 IO 瓶颈 / 查询命中大量数据 / 分片不均衡"
+  tags: ["es", "latency", "performance"]
+
+- id: D008
+  input:
+    query: "HDFS 写入延迟从 5ms 增加到 500ms"
+    request_type: "user_query"
+    context:
+      component: "hdfs"
+      metric: "write_latency_ms"
+      current_value: 500
+      baseline: 5
+  expected:
+    root_cause_contains: ["写入", "延迟", "HDFS"]
+    confidence_min: 0.5
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "DataNode 磁盘 IO 瓶颈 / 网络拥塞 / NameNode RPC 队列积压"
+  tags: ["hdfs", "write_latency", "performance"]
+
+- id: D009
+  input:
+    query: "YARN 作业一直处于 ACCEPTED 状态不运行"
+    request_type: "user_query"
+    context:
+      component: "yarn"
+      app_state: "ACCEPTED"
+  expected:
+    root_cause_contains: ["资源", "队列", "容量"]
+    confidence_min: 0.5
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "队列资源不足或已满 / AM 资源不够 / 调度器配置问题"
+  tags: ["yarn", "scheduling", "resource"]
+
+- id: D010
+  input:
+    query: "NameNode 频繁 Full GC，每次暂停 5 秒以上"
+    request_type: "alert"
+    context:
+      component: "hdfs"
+      metric: "nn_gc_pause_seconds"
+      value: 5.2
+      gc_count_per_hour: 12
+  expected:
+    root_cause_contains: ["GC", "NameNode", "暂停"]
+    confidence_min: 0.6
+    evidence_required: true
+    remediation_safe: true
+    tools_used_min: 3
+  ground_truth:
+    root_cause: "NameNode heap 配置不足 + 大量小文件导致元数据膨胀"
+    remediation: "调整 GC 参数 / 增大 heap / 执行小文件合并"
+  tags: ["hdfs", "gc", "critical"]
+
+- id: D011
+  input:
+    query: "Hive 查询在 Map 阶段卡住不动"
+    request_type: "user_query"
+    context:
+      component: "hive"
+      query_id: "hive_20260330_001"
+      stage: "map"
+  expected:
+    root_cause_contains: ["Map", "数据倾斜", "Hive"]
+    confidence_min: 0.4
+    evidence_required: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "数据倾斜导致部分 Map 任务处理数据量远大于其他任务"
+  tags: ["hive", "data_skew", "complex"]
+
+- id: D012
+  input:
+    query: "多个 DataNode 同时报磁盘故障"
+    request_type: "alert"
+    context:
+      component: "hdfs"
+      affected_datanodes: ["dn-01", "dn-02", "dn-03"]
+      failed_volumes: 5
+  expected:
+    root_cause_contains: ["磁盘", "DataNode", "故障"]
+    confidence_min: 0.6
+    evidence_required: true
+    remediation_safe: true
+    tools_used_min: 2
+  ground_truth:
+    root_cause: "同批次磁盘批量故障，需要更换磁盘并触发 HDFS 副本恢复"
+  tags: ["hdfs", "disk_failure", "critical"]

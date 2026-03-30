@@ -1,0 +1,40 @@
+# ================================================================
+# Go MCP Server — 多阶段构建
+#
+# Stage 1: Go Builder  — 编译 MCP Server
+# Stage 2: Runtime     — distroless 极简镜像（~5MB）
+#
+# 构建: docker build -f infra/docker/Dockerfile.mcp -t aiops/mcp-server:latest .
+# ================================================================
+
+# ===== Stage 1: Builder =====
+FROM golang:1.22-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /build
+COPY go/go.mod go/go.sum ./
+RUN go mod download
+
+COPY go/ .
+
+# 静态编译，注入版本信息
+ARG VERSION=dev
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w -X main.Version=${VERSION} -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    -o /mcp-server ./cmd/mcp-server/
+
+# ===== Stage 2: Runtime (distroless) =====
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /mcp-server /mcp-server
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY go/configs/ /etc/aiops/configs/
+
+USER nonroot:nonroot
+
+EXPOSE 3000
+
+# distroless 不支持 shell，healthcheck 由 K8s probe 处理
+ENTRYPOINT ["/mcp-server"]
+CMD ["--config=/etc/aiops/configs/production.yaml"]

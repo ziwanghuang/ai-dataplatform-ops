@@ -1,0 +1,42 @@
+# Staging 环境 — 2 副本、真实 LLM、OTel 开启
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: aiops-staging
+
+patches:
+  - target:
+      kind: Deployment
+      name: agent-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "2Gi"
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: agent-service-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 4
+
+configMapGenerator:
+  - name: agent-config
+    behavior: merge
+    literals:
+      - ENV=staging
+      - LLM_PROVIDER=openai
+      - OTEL_ENABLED=true
+      - LOG_LEVEL=INFO
+      - HITL_AUTO_APPROVE=false
+      - RATE_LIMIT_GLOBAL_RPS=50
+      - CIRCUIT_BREAKER_ENABLED=true

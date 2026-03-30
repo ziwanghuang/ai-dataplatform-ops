@@ -1,0 +1,55 @@
+# Dev 环境 — 单副本、Mock LLM、关闭 OTel
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: aiops-dev
+
+patches:
+  # agent-service: 单副本 + 低资源
+  - target:
+      kind: Deployment
+      name: agent-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "1Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "500m"
+  # mcp-gateway: 单副本
+  - target:
+      kind: Deployment
+      name: mcp-gateway
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  # HPA: 缩小范围
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: agent-service-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+
+configMapGenerator:
+  - name: agent-config
+    behavior: merge
+    literals:
+      - ENV=dev
+      - LLM_PROVIDER=mock
+      - OTEL_ENABLED=false
+      - LOG_LEVEL=DEBUG
+      - HITL_AUTO_APPROVE=true
+      - RATE_LIMIT_GLOBAL_RPS=1000
+      - CIRCUIT_BREAKER_ENABLED=false

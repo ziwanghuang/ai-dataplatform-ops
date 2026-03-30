@@ -1,0 +1,35 @@
+# ConfigMap — Agent 运行配置（base 版本）
+# 各环境通过 Kustomize overlay 覆盖
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-config
+  namespace: aiops-production
+data:
+  ENV: "production"
+  LOG_LEVEL: "INFO"
+  # LLM
+  LLM_PROVIDER: "openai"
+  PRIMARY_LLM_MODEL: "deepseek-chat"
+  FALLBACK_LLM_MODEL: "gpt-4o"
+  # Agent
+  HITL_AUTO_APPROVE: "false"
+  MAX_DIAGNOSTIC_ROUNDS: "4"
+  # RAG
+  MILVUS_URI: "http://milvus:19530"
+  MILVUS_COLLECTION: "ops_documents"
+  ES_URL: "http://elasticsearch:9200"
+  # 可观测
+  OTEL_ENABLED: "true"
+  LANGFUSE_HOST: "http://langfuse:3000"
+  # 安全
+  RATE_LIMIT_GLOBAL_RPS: "100"
+  RATE_LIMIT_PER_USER_RPS: "10"
+  CIRCUIT_BREAKER_ENABLED: "true"
+  CIRCUIT_BREAKER_THRESHOLD: "5"
+  SENSITIVE_DATA_HANDLER_ENABLED: "true"
+  # 数据库
+  DATABASE_URL: "postgresql://aiops:aiops@postgres:5432/aiops"
+  REDIS_URL: "redis://redis:6379/0"
+  # MCP
+  MCP_SERVER_URL: "http://mcp-gateway:80/mcp"

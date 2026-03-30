@@ -1,0 +1,28 @@
+# Service 定义
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-service
+  namespace: aiops-production
+spec:
+  selector:
+    app: agent-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-gateway
+  namespace: aiops-production
+spec:
+  selector:
+    app: mcp-gateway
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+  type: ClusterIP

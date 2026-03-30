@@ -1,0 +1,22 @@
+# PodDisruptionBudget — 滚动更新时保障可用性
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agent-service-pdb
+  namespace: aiops-production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: agent-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mcp-gateway-pdb
+  namespace: aiops-production
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: mcp-gateway

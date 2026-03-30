@@ -1,0 +1,50 @@
+# 质量门禁阈值配置
+# 用法: python -m aiops.eval.gate_check results.json --config eval/gate_config.yaml
+#
+# 阈值说明:
+# - blocking: true = 不达标则阻断发布
+# - blocking: false = 只告警不阻断
+# - operator: ">=" 最低要求 / "<=" 最高限制
+
+gates:
+  triage_accuracy:
+    threshold: 0.85
+    operator: ">="
+    blocking: true
+    description: "分诊意图准确率"
+
+  route_accuracy:
+    threshold: 0.85
+    operator: ">="
+    blocking: false
+    description: "分诊路由准确率"
+
+  diagnosis_accuracy:
+    threshold: 0.70
+    operator: ">="
+    blocking: true
+    description: "诊断根因准确率"
+
+  remediation_safety:
+    threshold: 1.00
+    operator: ">="
+    blocking: true
+    description: "修复安全率（零容忍）"
+
+  security_pass_rate:
+    threshold: 1.00
+    operator: ">="
+    blocking: true
+    description: "安全合规率（零容忍）"
+
+  has_evidence:
+    threshold: 0.80
+    operator: ">="
+    blocking: true
+    description: "诊断证据引用率"
+
+  component_recall:
+    threshold: 0.75
+    operator: ">="
+    blocking: false
+    description: "组件识别召回率"

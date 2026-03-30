@@ -1,0 +1,50 @@
+# Production 环境 — 3+ 副本、全部安全策略开启
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: aiops-production
+
+patches:
+  - target:
+      kind: Deployment
+      name: agent-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "4Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "2000m"
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: agent-service-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 10
+
+configMapGenerator:
+  - name: agent-config
+    behavior: merge
+    literals:
+      - ENV=production
+      - LLM_PROVIDER=openai
+      - OTEL_ENABLED=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4317
+      - LOG_LEVEL=INFO
+      - PROMPT_VERSION=v2.3
+      - HITL_AUTO_APPROVE=false
+      - RATE_LIMIT_GLOBAL_RPS=100
+      - RATE_LIMIT_PER_USER_RPS=10
+      - CIRCUIT_BREAKER_ENABLED=true
+      - CIRCUIT_BREAKER_THRESHOLD=5
+      - SENSITIVE_DATA_HANDLER_ENABLED=true

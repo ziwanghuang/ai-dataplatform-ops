@@ -1,0 +1,82 @@
+# ================================================================
+# AI DataPlatform Ops Agent — Python 多阶段构建
+#
+# Stage 1: Go Builder   — 编译 MCP Server binary（可选 sidecar）
+# Stage 2: Python Builder — 安装 Poetry 依赖
+# Stage 3: Runtime       — 最小运行时镜像
+#
+# 构建: docker build -f infra/docker/Dockerfile.agent -t aiops/agent:latest .
+# ================================================================
+
+# ===== Stage 1: Go Builder (MCP Server sidecar binary) =====
+FROM golang:1.22-alpine AS go-builder
+
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /build
+COPY go/go.mod go/go.sum ./
+RUN go mod download
+
+COPY go/ .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    -o /mcp-server ./cmd/mcp-server/
+
+# ===== Stage 2: Python Builder =====
+FROM python:3.12-slim AS py-builder
+
+RUN pip install --no-cache-dir poetry==1.8.3
+
+WORKDIR /build
+COPY python/pyproject.toml python/poetry.lock* ./
+
+# 只安装生产依赖，venv 在项目内方便拷贝
+RUN poetry config virtualenvs.in-project true && \
+    poetry install --only main --no-interaction --no-ansi
+
+COPY python/src/ ./src/
+
+# ===== Stage 3: Runtime =====
+FROM python:3.12-slim
+
+# 安全补丁 + 运行时工具
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates curl tini && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 复制 Go binary（MCP Server sidecar）
+COPY --from=go-builder /mcp-server /usr/local/bin/mcp-server
+
+# 复制 Python venv + 源码
+COPY --from=py-builder /build/.venv /app/.venv
+COPY --from=py-builder /build/src /app/src
+
+# 复制评估数据集（CI 评估阶段需要）
+COPY eval/ /app/eval/
+
+# 环境变量
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app/src" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# 非 root 用户
+RUN groupadd --system aiops && \
+    useradd --system --gid aiops --create-home aiops && \
+    chown -R aiops:aiops /app
+
+USER aiops
+WORKDIR /app
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/healthz || exit 1
+
+EXPOSE 8080
+
+# tini 作为 PID 1（正确处理信号转发）
+ENTRYPOINT ["tini", "--"]
+CMD ["uvicorn", "aiops.web.app:app", "--host", "0.0.0.0", "--port", "8080", \
+     "--workers", "4", "--loop", "uvloop", "--http", "httptools"]

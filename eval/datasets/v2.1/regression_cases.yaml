@@ -1,0 +1,10 @@
+# 回归测试用例集 — 自动追加
+# 由 BadCaseAutoDiscovery 发现的问题自动写入此文件
+# 格式与其他 *_cases.yaml 一致
+#
+# 追加规则:
+#   - 每条记录包含: id / input / expected / tags / source
+#   - source 字段标记来源 (badcase_auto / human_review / ab_test)
+#   - 新用例追加到文件末尾
+
+cases: []

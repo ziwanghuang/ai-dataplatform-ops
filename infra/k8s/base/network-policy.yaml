@@ -1,0 +1,74 @@
+# NetworkPolicy — 零信任网络
+# 文档参考: 20-部署CICD与运维.md §1.5
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-service-netpol
+  namespace: aiops-production
+spec:
+  podSelector:
+    matchLabels:
+      app: agent-service
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-apisix
+      ports:
+        - port: 8080
+  egress:
+    # 允许访问 MCP Gateway
+    - to:
+        - podSelector:
+            matchLabels:
+              app: mcp-gateway
+      ports:
+        - port: 3000
+    # 允许访问 PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - port: 5432
+    # 允许访问 Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - port: 6379
+    # 允许访问外部 LLM API (HTTPS)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]
+      ports:
+        - port: 443
+    # 允许 DNS 解析
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# MCP Gateway NetworkPolicy — 只允许 agent-service 访问
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mcp-gateway-netpol
+  namespace: aiops-production
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-gateway
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: agent-service
+      ports:
+        - port: 3000
